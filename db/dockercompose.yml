@@ -1,5 +1,5 @@
 services:
-  # Base de données MariaDB (XAMPP compatible)
+  # Base de données MariaDB
   db:
     image: mariadb:10.6
     container_name: moneywise-db
@@ -12,7 +12,8 @@ services:
 
   # Backend Spring Boot
   backend:
-    build: ./backend
+    build: 
+      context: ../backend  # On remonte d'un dossier pour trouver 'backend'
     container_name: moneywise-api
     restart: always
     ports:
@@ -26,7 +27,8 @@ services:
 
   # Frontend Angular
   frontend:
-    build: ./frontend
+    build: 
+      context: ../frontend # On remonte d'un dossier pour trouver 'frontend'
     container_name: moneywise-ui
     restart: always
     ports:
