@@ -1,5 +1,4 @@
 services:
-  # Base de données MariaDB
   db:
     image: mariadb:10.6
     container_name: moneywise-db
@@ -10,10 +9,9 @@ services:
     ports:
       - "3307:3306"
 
-  # Backend Spring Boot
   backend:
     build: 
-      context: ../backend  # On remonte d'un dossier pour trouver 'backend'
+      context: ../backend
     container_name: moneywise-api
     restart: always
     ports:
@@ -25,10 +23,9 @@ services:
     depends_on:
       - db
 
-  # Frontend Angular
   frontend:
     build: 
-      context: ../frontend # On remonte d'un dossier pour trouver 'frontend'
+      context: ../frontend
     container_name: moneywise-ui
     restart: always
     ports:
