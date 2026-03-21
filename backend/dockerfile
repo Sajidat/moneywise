@@ -1,0 +1,45 @@
+# Étape 1 : Build avec Maven + Java 17
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
+WORKDIR /app
+
+# Copier le pom.xml et le wrapper Maven
+COPY pom.xml .
+# Note : Si tu n'as pas le dossier .mvn ou le script mvnw dans ton repo, 
+# Maven utilisera celui de l'image de base.
+COPY .mvn .mvn
+COPY mvnw .
+RUN chmod +x mvnw
+
+# Télécharger les dépendances (Cache Docker)
+RUN ./mvnw dependency:go-offline -B
+
+# Copier le code source
+COPY src src
+
+# Build du JAR
+RUN ./mvnw clean package -DskipTests
+
+# Étape 2 : Image finale ultra-légère (JRE Alpine)
+FROM eclipse-temurin:17-jre-alpine
+
+# Ajout d'un utilisateur non-root pour la sécurité (Bonne pratique DevOps)
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+WORKDIR /app
+
+# On laisse les variables vides ou avec des valeurs de secours, 
+# car elles seront injectées par Docker Compose
+ENV SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/moneywise
+ENV SPRING_DATASOURCE_USERNAME=user_money
+ENV SPRING_DATASOURCE_PASSWORD=user_password
+
+# Copier le jar depuis l'étape build
+COPY --from=build /app/target/*.jar app.jar
+
+# Port interne
+EXPOSE 8080
+
+# Entrypoint optimisé pour les conteneurs
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
